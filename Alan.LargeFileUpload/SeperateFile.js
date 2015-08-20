@@ -26,6 +26,9 @@
      * @returns {
      *      continueSeperate: 断点续传
      * } 
+     * 
+     * userOptions 里的start, 
+     * sending, sent事件
      */
     window.SeperateFile = function (file, userOptions) {
         if (!file || !file.name || !file.size || !file.slice) {
