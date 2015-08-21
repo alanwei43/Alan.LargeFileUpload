@@ -135,9 +135,16 @@
                 //发送 unsend 数据块(lastQueue)
                 lastQueue.status = 'sending'; //change last queue status to sending
                 var block = file.slice(lastQueue.start, lastQueue.end);
+                /*
+                 * reader.readAsDataURL方法是将一个Blob对象读去成Data URI格式
+                 * Data URI 语法是这样的 data:[<mediatype>][;base64],<data>
+                 * via: https://developer.mozilla.org/en-US/docs/Web/HTTP/data_URIs 和 http://tools.ietf.org/html/rfc2397
+                 * 
+                 * 使用readAsDataURL可以把一个数据块(Blob对象)转换成Data URI, 然后从Data URI中获取base64.
+                 */
                 reader.readAsDataURL(block);
                 reader.onload = function () {
-                    var base64 = reader.result.split(',')[1];
+                    var base64 = reader.result.split(',')[1];   //获取base64
                     lastQueue.data = base64;
                     var promise = options.send(lastQueue, uploadConfig.queues);
                     promise.then(function () {
@@ -188,6 +195,5 @@
         };
         return utils;
     };
-
 
 })();
