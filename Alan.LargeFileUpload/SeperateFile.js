@@ -16,7 +16,7 @@
      * @param file: File对象
      * @param userOptions:{
      *      start: 文件上传开始, 
-     *      send: 发送数据, 
+     *      send: 发送数据(这个函数要返回一个Promise对象), 
      *      sending: 正在发送数据, 
      *      sent: 数据发送完成, 
      *      finish: 文件上传结束, 
@@ -41,9 +41,13 @@
         var reader = new FileReader();
 
         /*
-         * options 里的start, sending, sent, finish, error事件 默认实现是出发相应body事件(PubSub模式), 这样的好处是可以在多个地方监听相应事件.  当然你也可以重写这几个方法.
+         * options 里的start, sending, sent, finish, error事件 默认实现是触发相应body事件(PubSub模式), 这样的好处是可以在多个地方监听相应事件.  当然你也可以重写这几个方法.
          * 
          * 事件的命名采用了jQuery的事件命名空间, 你可以 $("body").off(".fileupload") 注销下面的所有事件.
+         * 
+         * 其中options.send函数需要返回一个promise对象, 已确定发送的数据块, 服务器是否接收到了. 如果接收成功, 更改数据块的状态为sent, 失败, 状态改为unsend. 然后等待续传.
+         * (在这里安利一下Promise, 很多人天天写异步JavaScript代码, 比如Ajax, 不过有一部分人并不了解一个非常流行的异步编程风格Promise. 在这里使用了jQuery的Promise实现, Promise是一种异步编程风格, 因为jQuery类库自身的历史原因, jQuery的Promise实现并不是标准实现, 有一个叫q的标准实现[https://github.com/kriskowal/q].)
+         * Promise 参考资料: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise 
          */
         var options = {
             start: function () {
