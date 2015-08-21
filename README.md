@@ -4,7 +4,7 @@
 利用JavaScript(主要是FileReader对象)实现大文件异步上传, 支持断点续传. 项目后台代码使用C#完成, 其他语言也可以, 主要代码量在JavaScript(SeperateFile.js)里面.
 
 ### 项目简单描述
-*(SeperateFile.js)[https://github.com/Allen-Wei/Alan.LargeFileUpload/blob/master/Alan.LargeFileUpload/SeperateFile.js]* 文件实现分割文件, 并放到队列(queues)里.
+*[SeperateFile.js](https://github.com/Allen-Wei/Alan.LargeFileUpload/blob/master/Alan.LargeFileUpload/SeperateFile.js)* 文件实现分割文件, 并放到队列(queues)里.
 
 队列里的每一小块文件都有状态标识(*unsend*, *sending*, *sent*), 这个状态有两个作用, 
 
