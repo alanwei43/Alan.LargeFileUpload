@@ -27,16 +27,24 @@
      *      continueSeperate: 断点续传
      * } 
      * 
-     * userOptions 里的start, 
-     * sending, sent事件
+     * 
      */
     window.SeperateFile = function (file, userOptions) {
+
         if (!file || !file.name || !file.size || !file.slice) {
+            //第一个参数必须拥有name, size属性和slice方法
+            //JavaScript默认的File对象满足这个要求.
+            //这个地方这么写(没有强制要求是JavaScript的File对象)的好处是你自己可以封装一个类似于File对象的东西.
             throw "invalid file";
         }
 
         var reader = new FileReader();
 
+        /*
+         * options 里的start, sending, sent, finish, error事件 默认实现是出发相应body事件(PubSub模式), 这样的好处是可以在多个地方监听相应事件.  当然你也可以重写这几个方法.
+         * 
+         * 事件的命名采用了jQuery的事件命名空间, 你可以 $("body").off(".fileupload") 注销下面的所有事件.
+         */
         var options = {
             start: function () {
                 $("body").trigger("fuStart.fileupload");
@@ -56,24 +64,35 @@
             finish: function (queues) {
                 $("body").trigger("fuFinish.fileupload", [queues]);
             },
-            error: function () { }
+            error: function (queues) {
+                $("body").trigger("fuError.fileupload", [queues]);
+            }
         };
 
         var uploadConfig = {
             totalSize: file.size,
             blockSize: 100 * 1024,
             timeOut: 100,
-            queues: [
-                {
-                    start: 0,
-                    end: NaN,
-                    status: 'unsend',
-                    data: undefined
-                }
-            ]
+            queues: [{
+                /*
+                 * 这个就是数据队列了
+                 * 数据队列是按顺序将file对象的分割填充进去的
+                 * 只有最后一块数据发送成功之后, 才开始填充下一块数组
+                 * 
+                 * start: 数据块的开始位置
+                 * end: 数据块的结束位置
+                 * status: 数据块的发送状态, unsend: 未发送, sending: 正在发送, sent: 已发送
+                 * data: 是一个base64格式的数据
+                 */
+                start: 0,
+                end: NaN,
+                status: 'unsend',
+                data: undefined
+            }]
         };
 
         if (userOptions) {
+            //覆盖默认配置
             $.extend(options, userOptions);
             uploadConfig.blockSize = userOptions.blockSize || uploadConfig.blockSize;
         }
@@ -84,19 +103,22 @@
         }
 
         (function () {
-            //initial first queue
+            //初始化第一个数据块
             var firstQueue = {
                 start: 0,
                 end: NaN,
                 status: 'unsend',
                 data: undefined
             };
+            //如果file.size <= blockSize, 第一个数据块的结束位置就为file.size
             firstQueue.end = firstQueue.start + uploadConfig.blockSize;
             firstQueue.end = firstQueue.end > uploadConfig.totalSize ? uploadConfig.totalSize : firstQueue.end;
             uploadConfig.queues[0] = firstQueue;
         })();
 
-
+        //1: 发送队列中的unsend数据块
+        //2: 发送成功后填充下一个数据块
+        //回到1
         var interval = function () {
 
             var lastQueue = uploadConfig.queues[uploadConfig.queues.length - 1]; //last queue
@@ -106,7 +128,7 @@
                 return;
             }
             if (lastQueue.status === 'unsend') {
-                //lastQueue unsend
+                //发送 unsend 数据块(lastQueue)
                 lastQueue.status = 'sending'; //change last queue status to sending
                 var block = file.slice(lastQueue.start, lastQueue.end);
                 reader.readAsDataURL(block);
@@ -137,6 +159,7 @@
                 var endSize = lastQueue.end + uploadConfig.blockSize;
                 endSize = endSize > uploadConfig.totalSize ? uploadConfig.totalSize : endSize;
 
+                //填充下一个数据块
                 uploadConfig.queues.push({
                     start: lastQueue.end,
                     end: endSize,

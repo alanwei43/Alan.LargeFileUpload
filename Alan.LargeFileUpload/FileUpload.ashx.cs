@@ -23,20 +23,11 @@ namespace Alan.LargeFileUpload
             {
                 fileName = Guid.NewGuid().ToString();
             }
-            using (System.IO.BinaryReader reader = new System.IO.BinaryReader(req.InputStream))
+            using (System.IO.StreamReader reader = new System.IO.StreamReader(req.InputStream))
             {
-                System.IO.MemoryStream ms = new System.IO.MemoryStream();
-                int bte;
-                while ((bte = reader.Read()) != -1)
-                {
-                    ms.WriteByte((byte)bte);
-                }
-                var arrayBytes = ms.ToArray();
-                var base64 = System.Text.Encoding.UTF8.GetString(arrayBytes);
+                var base64 = reader.ReadToEnd();
                 var data = Convert.FromBase64String(base64);
-
                 var fileFullPath = System.Web.Hosting.HostingEnvironment.MapPath("~/Static/" + fileName);
-
                 this.AppedOrCreate(fileFullPath, data);
             }
             rep.Write("{\"FileName\":\"" + fileName + "\"}");
