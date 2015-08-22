@@ -22,7 +22,7 @@
                 $("#file-name").text("File Name: " + file.name);
                 $("#file-total-size").text("File Size: " + file.size);
 
-                var upload = SeperateFile(file, {
+                var seperate = SeperateFile(file, {
                     blockSize: 100 * 1024,
                     send: function (queue) {
                         var promise = sendFile(file.name, queue.data);
@@ -38,7 +38,7 @@
                     },
                     error: function () {
                         $("#continue").show().one("click", function () {
-                            upload.continueSeperate();  //续传
+                            seperate.continueSeperate();  //续传
                         });
                     }
                 });

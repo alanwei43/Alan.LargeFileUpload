@@ -91,7 +91,10 @@
                 start: 0,
                 end: NaN,
                 status: 'unsend',
-                data: undefined
+                data: undefined,
+                isFirst: true,
+                isLast: false,
+                index: 0
             }]
         };
 
@@ -112,8 +115,13 @@
                 start: 0,
                 end: NaN,
                 status: 'unsend',
-                data: undefined
+                data: undefined,
+                isFirst: true,
+                isLast: false,
+                index: 0,
+                total: 0
             };
+            firstQueue.total = Math.ceil(uploadConfig.totalSize / uploadConfig.blockSize);
             //如果file.size <= blockSize, 第一个数据块的结束位置就为file.size
             firstQueue.end = firstQueue.start + uploadConfig.blockSize;
             firstQueue.end = firstQueue.end > uploadConfig.totalSize ? uploadConfig.totalSize : firstQueue.end;
@@ -131,6 +139,7 @@
                 options.finish(uploadConfig.queues);
                 return;
             }
+
             if (lastQueue.status === 'unsend') {
                 //发送 unsend 数据块(lastQueue)
                 lastQueue.status = 'sending'; //change last queue status to sending
@@ -168,13 +177,18 @@
                 }
 
                 var endSize = lastQueue.end + uploadConfig.blockSize;
-                endSize = endSize > uploadConfig.totalSize ? uploadConfig.totalSize : endSize;
+                var isLast = endSize >= uploadConfig.totalSize;
+                endSize = isLast ? uploadConfig.totalSize : endSize;
 
                 //填充下一个数据块
                 uploadConfig.queues.push({
                     start: lastQueue.end,
                     end: endSize,
-                    status: 'unsend'
+                    status: 'unsend',
+                    data: undefined,
+                    isFirst: false,
+                    isLast: isLast,
+                    index: uploadConfig.queues.length
                 });
                 options.sent(lastQueue, uploadConfig.queues);
                 setTimeout(interval, uploadConfig.timeOut);
