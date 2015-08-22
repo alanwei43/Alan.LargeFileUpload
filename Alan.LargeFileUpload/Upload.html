@@ -23,7 +23,7 @@
                 $("#file-total-size").text("File Size: " + file.size);
 
                 var seperate = SeperateFile(file, {
-                    blockSize: 100 * 1024,
+                    blockSize: 2 * 1024 * 1024,
                     send: function (queue) {
                         var promise = sendFile(file.name, queue.data);
                         return promise;

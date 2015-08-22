@@ -170,6 +170,8 @@
                 options.sending(lastQueue, uploadConfig.queues);
             }
             if (lastQueue.status === 'sent') {
+                lastQueue.data = null;  //清空已传输完成的数据
+
                 //lastQueue已经发送
                 if (lastQueue.end >= uploadConfig.totalSize) {
                     options.finish(uploadConfig.queues);
