@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>File Upload Demonstration</title>
+    <meta charset="utf-8" />
+    <script src="jquery-1.11.2.js"></script>
+    <script src="SeperateFile-2.0.js"></script>
+</head>
+<body>
+    <input type="file" value="" name="excel" id="file-input" />
+    <button id="upload" title="开始上传">Start Upload</button>
+    <button id="pause" title="暂停/继续 上传">Pause/Continue</button>
+    <button id="continue" style="display: none" title="断点续传">Continue Upload</button>
+    <p>
+        <span id="file-name"></span> | <span id="file-total-size"></span>
+    </p>
+    <p id="progress"></p>
+    <script>
+
+        $(document).ready(function () {
+            $("#pause").on("click", function () {
+                seperate.pauseSeperate();
+                if (seperate.isPause()) {
+                    $(this).text("Paused");
+                } else {
+                    $(this).text("Continue");
+                }
+            });
+            $("#upload").on("click", function () {
+                var file = document.getElementById("file-input").files[0];
+                $("#file-name").text("File Name: " + file.name);
+                $("#file-total-size").text("File Size: " + file.size);
+
+                window.seperate = SeperateFile(file, {
+                    blockSize: 3 * 1024 * 1024,
+                    durationPerSend: 0,
+                    send: function (queue) {
+                        var promise = sendFile(file.name, queue.data);
+                        return promise;
+                    },
+                    sent: function (queue) {
+                        var progress = ((queue.end / file.size) * 100).toFixed(2) + "%";
+                        $("#progress").text("Sent: " + progress);
+                        $("#continue").hide();
+                    },
+                    finish: function (queues) {
+                        $("#progress").text("Finish: 100%");
+                    },
+                    error: function () {
+                        $("#continue").show().one("click", function () {
+                            seperate.continueSeperate();  //续传
+                        });
+                    }
+                });
+                return;
+            });
+
+            // Ajax 发送文件到服务器
+            var sendFile = function (fileName, data) {
+                var defer = $.Deferred();
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/FileUpload.ashx?fileName=" + fileName);
+                xhr.send(data);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            defer.resolve();
+                        } else {
+                            defer.reject();
+                        }
+                    }
+                }
+                return defer.promise();
+            }
+        });
+    </script>
+
+
+</body>
+</html>
