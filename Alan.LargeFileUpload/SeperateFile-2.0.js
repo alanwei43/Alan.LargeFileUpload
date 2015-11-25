@@ -127,10 +127,18 @@
                 finishSendTime: undefined,
                 spend: undefined
             };
-            firstQueue.total = Math.ceil(uploadConfig.totalSize / uploadConfig.blockSize);
-            //如果file.size <= blockSize, 第一个数据块的结束位置就为file.size
-            firstQueue.end = firstQueue.start + uploadConfig.blockSize;
-            firstQueue.end = firstQueue.end > uploadConfig.totalSize ? uploadConfig.totalSize : firstQueue.end;
+
+            if (uploadConfig.totalSize <= uploadConfig.blockSize) {
+                //文件的数据小于每次上传的块大小
+                firstQueue.isLast = true;
+                firstQueue.total = 1;
+                firstQueue.end = uploadConfig.totalSize;
+            } else {
+                firstQueue.total = Math.ceil(uploadConfig.totalSize / uploadConfig.blockSize);
+                firstQueue.isLast = false;
+                firstQueue.end = firstQueue.start + uploadConfig.blockSize;
+            }
+
             uploadConfig.queues[0] = firstQueue;
         })();
 
@@ -243,3 +251,4 @@
     };
 
 })();
+
